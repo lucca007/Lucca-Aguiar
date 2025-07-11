@@ -1,0 +1,11 @@
+#**Association Studies - In work**
+
+## Introdução
+Este repositório contém um guai prático para realização de GWAS, levando em conta Controles de Qualidade e Fine-mapping
+
+
+##Controles de Qualidade
+
+Os arquivos passam necessariamente pelo script de ,propriedade do LDGH (Laboratório de Diversidade Genética Humana):
+- MosaiQC (https://github.com/ldgh/MosaiQC-public) 
+- 3A (https://github.com/ldgh/3A-public).
