@@ -69,7 +69,7 @@ O script é realizado em R >= v.4 utilizando as seguintes bibliotecas:
 - DHARMa
 - MuMIn
 
-### Controle de Qualidade Regressão
+### Controle de Qualidade da Regressão
 Com o modelo estimado, é realizado a análise da regressão com auxílio dos gráficos diagnósticos.  
 É estimado o R² marginal e condicional, se possuir efeitos aleatórios no modelo (NAKAGAWA; SCHIELZETH, 2013).
 
