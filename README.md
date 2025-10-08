@@ -7,8 +7,14 @@ Este repositório fornece um guia prático para a condução de estudos de assoc
 
 - Controles de Qualidade para dados genéticos  
 - Escolha de Covariáveis (*StepWise*) e Controle de Qualidade para Regressões
+- GWAS
 - Fine-mapping
 
+## Softwares
+- Plink
+- GTCA
+- SAIGE
+- NAToRA
 
 ## Cromossomos Autossômicos  
 
@@ -74,7 +80,10 @@ Com o modelo estimado, é realizado a análise da regressão com auxílio dos gr
 É estimado o R² marginal e condicional, se possuir efeitos aleatórios no modelo (NAKAGAWA; SCHIELZETH, 2013).
 
 
+## GWAS
+Realizado com o software SAIGE. A GRM pode ser feita com o GCTA.
 
+## Fine-mapping
 
 
 
