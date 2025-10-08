@@ -5,9 +5,9 @@
 ## Introdução  
 Este repositório fornece um guia prático para a condução de estudos de associação genômica ampla (**GWAS**), com foco em:
 
+- Controles de Qualidade para dados genéticos  
 - Escolha de modelo de Covariáveis 
 - Controle de Qualidade para Regressões 
-- Controles de Qualidade para dados genéticos  
 - Análise de Ancestralidade  
 - Fine-mapping  
 
@@ -18,12 +18,15 @@ Este repositório fornece um guia prático para a condução de estudos de assoc
 
 Os arquivos genéticos devem ser processados utilizando os seguintes pipelines desenvolvidos pelo **Laboratório de Diversidade Genética Humana (LDGH)**:
 
-- [`MosaiQC`](https://github.com/ldgh/MosaiQC-public): Controle de qualidade inicial dos dados genéticos  
-- [`3A`](https://github.com/ldgh/3A-public): Análise de ancestralidade da coorte
-- [`NAToRA`](https://github.com/ldgh/NAToRA_Public): Análise de kinship da coorte
+- [`MosaiQC`](https://github.com/ldgh/MosaiQC-public): Controle de qualidade inicial dos dados genéticos.
+- [`3A`](https://github.com/ldgh/3A-public): Análise de ancestralidade da coorte.
+- [`NAToRA`](https://github.com/ldgh/NAToRA_Public): Análise de kinship da coorte.
 
 
- Se a partir do software NAToRA for identificado clusteres familiares, fica a escolha do investigador decidir se remove ou não os indivíduos aparentados. Se for remover, o NAToRA indica quais são para remover, se decidir manter, utilizar um software para estudos de associação que possibilite incorporar *Genetic Relationship Matriz* como efeito aleatório. 
+Se o NAToRA identificar clusters familiares, o pesquisador pode escolher entre:
+
+ - Remover os indivíduos aparentados (o NAToRA indica quais);
+ - Manter e usar um software de associação que incorpore a *Genetic Relationship Matrix* (GRM) como efeito aleatório.
 
 ### Filtros para Análise de Associação
 
