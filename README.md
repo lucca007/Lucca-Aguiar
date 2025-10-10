@@ -1,25 +1,24 @@
 # Association Studies - *In progress*  
-**Idealizado por:** [Lucca V. Aguiar](https://github.com/luccav)
+**Idealizado por:** [Lucca V. Aguiar](https://github.com/luccav) e [Marcus Vinícuis](https://github.com/marcus0898)
+
+**Com auxílio de:** [Ivan G. Cruz](https://github.com/IvanGomesCruz) e [Pedro H. F. Baptista](https://github.com/p-baptista).
 
 
 ## Introdução  
-Este repositório fornece um guia prático para a condução de estudos de associação genômica ampla (**GWAS**), com foco em:
+Este repositório fornece um guia prático para a condução de Estudos de Associação de Varredura Genômica (**GWAS**), com foco em:
 
 - Controles de Qualidade para dados genéticos  
 - Escolha de Covariáveis (*StepWise*) e Controle de Qualidade para Regressões
 - GWAS
 - Fine-mapping
 
-## Softwares
-- Plink
-- GTCA
-- SAIGE
-- NAToRA
+### Scripts:
+- Manhattan_plotting.R: padronização de saída e geração de imagens
+- Step_Wise_model.R: escolha de modelo de regressão e CQ
+- filter.py: Análise pós associação, escolha de variante-líder
+- search.py: 
 
-## Cromossomos Autossômicos  
-
-### Controles de Qualidade  
-
+### Pré-requisitos: Pipelines 
 Os arquivos genéticos devem ser processados utilizando os seguintes pipelines desenvolvidos pelo **Laboratório de Diversidade Genética Humana (LDGH)**:
 
 - [`MosaiQC`](https://github.com/ldgh/MosaiQC-public): Controle de qualidade inicial dos dados genéticos.
@@ -27,15 +26,68 @@ Os arquivos genéticos devem ser processados utilizando os seguintes pipelines d
 - [`NAToRA`](https://github.com/ldgh/NAToRA_Public): Análise de kinship da coorte.
 - [`Annotation Tool`](https://github.com/ldgh/-Annotation_Tool): Anotação de variantes.
 
+### Pré-requisitos: Softwares 
+- Plink 
+- GTCA
+- SAIGE
+- NAToRA
 
-Se o NAToRA identificar clusters familiares, o pesquisador pode escolher entre:
+## Escolha de Covariáveis (*StepWise*) e Controle de Qualidade para Regressões
+A seleção de covariáveis é feita por meio do script stepwise, que permite duas abordagens:
+- **Foward step**: o fenótipo é testado individualmente com cada covariável disponível, e a covariável que melhora mais o modelo é adicionada à próxima iteração.
+- **Backward step**: as covariáveis não obrigatórias são removidas uma a uma, avaliando-se o impacto de cada remoção na qualidade do modelo.
 
- - Remover os indivíduos aparentados (o NAToRA indica quais);
- - Manter e usar um software de associação que incorpore a *Genetic Relationship Matrix* (GRM) como efeito aleatório.
+Covariaveis obrigatórias para o modelo são maleaveis, mas são como base Idade, Sexo, e os Componentes Principais (PCs) genéticos.
+Para comparação é utilizado *Likelihood-ratio test* (LRT) e *Bayesian Information Criterion* (BIC), com modelo de *Maximum Likelihood* (ML). Determinado o modelo final, é refeita a estimativa com *Restricted Maximum Likelihood* (REML), pacote **lmer4qtl**.
+
+### Escolha de Componentes Principais
+Similarmente ao *StepWise* é realizado a escolha de números de PCs com base em sua significância. 
+É realizado também a análise dos PCs para vermos se não representa alguma região genômica de alta variabilidade ou se esta clusterizando famílias, onde ambos os casos não são adequados para corrigir estruturação populacional.
+
+#### Bibliotecas
+O script é realizado em R >= v.4 utilizando as seguintes bibliotecas:
+- lme4qtl
+- readr
+- dplyr
+- MASS
+- DHARMa
+- MuMIn
+
+### Controle de Qualidade da Regressão
+Com o modelo estimado, é realizado a análise da regressão com auxílio dos gráficos diagnósticos.  
+É estimado o R² marginal e condicional, se possuir efeitos aleatórios no modelo (NAKAGAWA; SCHIELZETH, 2013).
+
+
+## GWAS
+Utilizamos o software GCTA (prentendemos mover para o SAIGE). Inicialmente criamos a *Genetic Relationship Matrix* (GRM) pelo próprio software. Deve-se aplicar o filtro de MAF nesta etapa. Aqui, estamos criando uma matrix cheia, mas se preferir, pode criar uma matrix esparsa, mas ai tem que estipular o *Cutoff* de *relatdness*.
+ ```
+gcta64 --bfile /caminha/para/os/arquivos/genéticos --make-grm --out /caminho/output/`
+```
+Para transformar o arquivo em texto para o script de *StepWise*, adicionar a flag:
+```
+--make-grm-gz
+```
+Se os dados forem muito grandes, é possível optar por criar uma GRM separadamente para cada cromossomo e, posteriormente, unificá-las em um único arquivo. Para isso, deve-se criar um arquivo .txt contendo o caminho de todas as GRMs correspondentes a cada cromossomo.
+```
+gcta64 --bfile test --make-grm-part 100 1 --thread-num 5 --out /output/path/test
+```
+```
+gcta64 --mgrm /path/todos_os_grm/multi_grm.txt --make-grm --out /path/output
+```
+
+Com a escolha das cováriaveis e números de PC's escolhido posteriormente, é relizado o GWAS:
+
+---
+> **Nota 1:**
+> Se o NAToRA identificar clusters familiares, o pesquisador pode escolher entre:
+> - Remover os indivíduos aparentados (o NAToRA indica quais);
+> - Manter e usar um software de associação que incorpore a *Genetic Relationship Matrix* (GRM) como efeito aleatório.
+
+> A escolha da metodologia influenciará os PCs, bem como a seleção do software utilizado para a sua geração.
+---
 
 ### Filtros para Análise de Associação
-
-Após o pré-processamento com o `MosaiQC`, aplicam-se os seguintes filtros, de acordo com o tipo de análise:
+Após o pré-processamento com o `MosaiQC`. Se aplicam os seguintes filtros, de acordo com o tipo de análise:
 
 #### Fenótipos Contínuos  
 - `MAF > 0.01`  
@@ -51,48 +103,22 @@ Após o pré-processamento com o `MosaiQC`, aplicam-se os seguintes filtros, de 
 - `HWE p-value > 1e-5`
 
 ---
-
-> **Nota:**  
+>> **Nota 2:**  
 Os limiares de MAF e HWE devem ser ajustados conforme o tamanho amostral da coorte.  
 É recomendado remover variantes com **MAC (Minor Allele Count) < 2**, já que variantes extremamente raras podem comprometer a análise de regressão e aumentar a chance de falsos positivos, especialmente em amostras pequenas.
-
+>> **Nota 3:** Para dados imputados se recomenda um cutoff de R²> 0,8.
 ---
-
-## Escolha de Covariáveis (*StepWise*) e Controle de Qualidade para Regressões
-A seleção de covariáveis é feita por meio do script stepwise, que permite duas abordagens:
-- **Foward step**: o fenótipo é testado individualmente com cada covariável disponível, e a covariável que melhora mais o modelo é adicionada à próxima iteração.
-- **Backward step**: as covariáveis não obrigatórias são removidas uma a uma, avaliando-se o impacto de cada remoção na qualidade do modelo.
-
-Covariaveis obrigatórias para o modelo são maleaveis, mas são como base Idade, Sexo, e os Componentes Principais (PCs) genéticos.
-Para comparação é utilizado *Likelihood-ratio test* (LRT) e *Bayesian Information Criterion* (BIC), com modelo de Maximum Likelihood (ML). Determinado o modelo final, é refeita a estimativa com Restricted Maximum Likelihood (REML).
-
-## Escolha de Componentes Principais
-Similarmente ao *StepWise* é realizado a escolha de números de PCs com base em sua significância. 
-É realizado também a análise dos PCs para vermos se não representa algumma região genômica de alta variabilidade ou se esta clusterizando famílias, onde em ambos os casos não seria adequado incorporar no modelo para corrigir estruturação populacional.
-
-### Bibliotecas
-O script é realizado em R >= v.4 utilizando as seguintes bibliotecas:
-- lme4qtl
-- readr
-- dplyr
-- MASS
-- DHARMa
-- MuMIn
-
-### Controle de Qualidade da Regressão
-Com o modelo estimado, é realizado a análise da regressão com auxílio dos gráficos diagnósticos.  
-É estimado o R² marginal e condicional, se possuir efeitos aleatórios no modelo (NAKAGAWA; SCHIELZETH, 2013).
-
-
-### GWAS
-Utilizamos o software GCTA (prentendemos mover para o SAIGE). Inicialmente criamos a *Genetic Relationship Matrix* (GRM) pelo próprio software:
- `SCRIPT GRM`
-
-Se os dados forem muito grande, podemos ter a opção de criar a GRM para cada cromossomo e posteriormente juntar todos:
-`CONCATENAÇÃO GRM CROMOSSOMOS INDIVIDUAIS`
-
-Com a escolha das cováriaveis e números de PC's escolhido posteriormente, é relizado o GWAS:
-
+Atualmente o GWAS esta sendo executado com o software GCTA, mas temos planos para incluir TRACTOR e SAIGE na linha de trabalho.
+```
+	gcta64 --bfile /home/Desktop/Plink_files/Quality_Control/Autossomic_Quality_Control \
+--mlma \
+--pheno /home/Desktop/Fenótipo/pheno.tsv \
+--qcovar /home/Desktop/Covar/gcta/Quantitative_covar \
+--covar /home/Desktop/Covar/gcta/Qualitative_covar \
+--threads 10 \
+--grm /home/Desktop/GRM_GCTA/GRM \
+--out /home/Desktop/tentativa_vinte/Age+Sex/Exemplo_output 
+```
 
 ## Fine-mapping
 Com o GWAS *Summary Statistics* é realizado:
@@ -100,8 +126,8 @@ Com o GWAS *Summary Statistics* é realizado:
 - Anotação das variantes com o software Annotation.
 - Criação Manhattan e QQ plot
 
-Este repositório contém um conjunto de scripts desenvolvidos por **LUCCA V. AGUIAR** e **MARCUS V. G. ANTUNES**, com o objetivo de:
 
+### Padronização de saídas, Plotagem e Comparação de bancos de dados
 - Auxiliar e padronizar a saída dos testes de associação genética.
 - Automatizar a plotação de imagens para análise de associação (Manhattan e QQ plots).
 - Padronizar a busca e comparação com o banco de dados GWAS Catalog, identificando variantes próximas fisicamente.
@@ -109,9 +135,7 @@ Este repositório contém um conjunto de scripts desenvolvidos por **LUCCA V. AG
 A filtragem e organização dos resultados são realizadas em Python, enquanto a plotação é feita em R devido à qualidade gráfica e disponibilidade de pacotes especializados. Para eficiência computacional, apenas variantes com p-valor menor ou igual ao limite estabelecido no config.ini serão processadas na plotação e comparação com o GWAS Catalog.
 
 
-
-## Bibliotecas
-
+#### Bibliotecas
 Python:
 - pandas
 - configparser (ConfigParser)
@@ -125,8 +149,7 @@ R:
 
 
   
-## Explicação e Arquivos de Input
-
+#### Explicação e Arquivos de Input
 Configuração do config.ini
 
 O arquivo config.ini deve ser configurado antes da execução do script. Os seguintes parâmetros precisam ser definidos:
@@ -154,7 +177,7 @@ Certifique-se de padronizar os nomes das colunas antes de executar o script.
 
 
 
-## Exemplo de Análise
+#### Exemplo de Análise
 Execução do Script:
 
 
